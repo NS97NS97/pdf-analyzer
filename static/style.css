@@ -1,0 +1,233 @@
+/* ===== Общие стили ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #eef2f7 0%, #dfe8f3 100%);
+    color: #2b3a4a;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 40px;
+}
+
+/* ===== Шапка ===== */
+header { text-align: center; margin-bottom: 28px; }
+
+.logo {
+    font-size: 44px;
+    width: 84px; height: 84px;
+    line-height: 84px;
+    margin: 0 auto 12px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(74, 111, 165, .18);
+}
+
+h1 { font-size: 30px; color: #24425f; }
+.subtitle { color: #6b7b8c; margin-top: 6px; font-size: 15px; }
+
+/* ===== Карточки ===== */
+.card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 6px 22px rgba(38, 62, 92, .08);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+h2 { font-size: 20px; color: #24425f; }
+
+/* ===== Кнопки ===== */
+.btn {
+    display: inline-block;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 22px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+}
+
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    background: #4A6FA5;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(74, 111, 165, .35);
+}
+.btn-primary:hover { background: #3d5f92; }
+
+.btn-success {
+    background: #2e9e6b;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(46, 158, 107, .3);
+}
+.btn-success:hover { background: #26845a; }
+
+.btn-ghost {
+    background: #eef2f7;
+    color: #55677a;
+}
+
+.disabled {
+    opacity: .45;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+/* ===== Ввод пути ===== */
+.hint {
+    color: #8b99a8;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.path-block {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed #d7e0ea;
+    animation: fadeIn .25s ease;
+}
+
+.path-block label {
+    display: block;
+    font-size: 14px;
+    color: #6b7b8c;
+    margin-bottom: 8px;
+}
+
+.path-block input {
+    width: 100%;
+    padding: 13px 15px;
+    font-size: 16px;
+    border: 2px solid #d7e0ea;
+    border-radius: 12px;
+    outline: none;
+    transition: border-color .15s;
+}
+.path-block input:focus { border-color: #4A6FA5; }
+
+.buttons-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+/* ===== Сообщения статуса ===== */
+.status {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    animation: fadeIn .2s ease;
+}
+.status.info  { background: #e8f1fd; color: #2c5aa0; }
+.status.ok    { background: #e6f7ee; color: #1f7a4d; }
+.status.error { background: #fdecec; color: #b3372f; }
+
+/* ===== Таблица результатов ===== */
+.empty {
+    text-align: center;
+    color: #8b99a8;
+    padding: 26px 10px;
+    font-size: 15px;
+}
+
+.table-wrap { overflow-x: auto; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th {
+    background: #4A6FA5;
+    color: #fff;
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #edf1f6;
+    vertical-align: top;
+    word-break: break-word;
+}
+
+tbody tr:nth-child(even) { background: #f7f9fc; }
+tbody tr:hover { background: #eef4fc; }
+
+.path-cell { color: #6b7b8c; font-size: 13px; max-width: 340px; }
+
+.path-link {
+    color: #4A6FA5;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(74, 111, 165, .5);
+    cursor: pointer;
+    word-break: break-word;
+}
+.path-link:hover { color: #2c5aa0; border-bottom-style: solid; }
+
+.year-cell { font-weight: 600; color: #24425f; white-space: nowrap; }
+
+/* ===== Спиннер ===== */
+.spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 3px solid rgba(255,255,255,.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: -3px;
+    animation: spin .8s linear infinite;
+}
+
+footer {
+    text-align: center;
+    color: #97a4b2;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.hidden { display: none; }
+
+/* ===== Предупреждение о работе на хостинге ===== */
+.host-warning {
+    background: #fff6e5;
+    border: 1px solid #f0d9a8;
+    color: #8a6420;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 22px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.host-warning code {
+    background: #fdeecb;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анализатор документов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <div class="logo">📄</div>
+        <h1>Анализатор документов</h1>
+        <p class="subtitle">Собирает из PDF-файлов в папке единый отчёт: название, автор, год, путь</p>
+    </header>
+
+    <!-- Предупреждение для хостинга (без рабочего стола) -->
+    <div id="hostWarning" class="host-warning hidden">
+        ⚠️ Сайт запущен на удалённом сервере (хостинге). Такой сервер
+        <b>не видит файлы и папки на вашем компьютере</b> — поэтому окно выбора папки,
+        открытие PDF и открытие Excel на вашем компьютере здесь работать не могут.
+        Чтобы всё работало как задумано, запускайте сайт на своём компьютере
+        (<code>python app.py</code>). Подробности — в README, раздел «Размещение в интернете».
+    </div>
+
+    <!-- Кнопка задания пути -->
+    <section class="card">
+        <button id="btnPath" class="btn btn-primary">
+            📂 Задать путь к архиву
+        </button>
+        <p class="hint">Откроется окно выбора папки на вашем компьютере</p>
+
+        <div id="pathBlock" class="path-block hidden">
+            <label for="folderPath">Путь к папке (можно отредактировать вручную):</label>
+            <input type="text" id="folderPath" placeholder="Например: D:\Работа\PDF">
+            <div class="buttons-row">
+                <button id="btnAnalyze" class="btn btn-primary">🔍 Проанализировать</button>
+                <button id="btnCancel" class="btn btn-ghost">Отмена</button>
+            </div>
+        </div>
+
+        <div id="status" class="status hidden"></div>
+    </section>
+
+    <!-- Результат анализа -->
+    <section class="card">
+        <div class="card-header">
+            <h2>📊 Результат анализа папки</h2>
+            <a id="btnExcel" class="btn btn-success disabled" href="/report.xlsx">📑 Открыть xls</a>
+        </div>
+
+        <div id="resultEmpty" class="empty">
+            Результатов пока нет — задайте путь и запустите анализ.
+        </div>
+
+        <div id="resultTableWrap" class="table-wrap hidden">
+            <table>
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Название</th>
+                        <th>Автор</th>
+                        <th>Год</th>
+                        <th>Путь к статье</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer>Локальный инструмент · данные никуда не отправляются</footer>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

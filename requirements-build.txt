@@ -1,0 +1,5 @@
+# Зависимости только для сборки .exe (для обычного запуска не нужны)
+pyinstaller
+flask
+pypdf
+openpyxl
