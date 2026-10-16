@@ -14,6 +14,7 @@ import glob
 import socket
 import tempfile
 import threading
+import traceback
 import webbrowser
 from urllib.parse import quote
 from flask import Flask, render_template, request, jsonify, send_file
@@ -70,8 +71,12 @@ app = Flask(
 
 @app.errorhandler(500)
 def handle_500(error):
-    """Чтобы страница получала понятное сообщение, а не пустую ошибку."""
-    return jsonify({"error": "Внутренняя ошибка сервера: " + str(error)}), 500
+    """Логируем настоящую ошибку и показываем её причину пользователю."""
+    original = getattr(error, "original_exception", None) or error
+    traceback.print_exc()
+    return jsonify({
+        "error": "Внутренняя ошибка: " + original.__class__.__name__ + ": " + str(original),
+    }), 500
 
 # ---------------------------------------------------------------------------
 # Файл отчёта. База данных не нужна.
@@ -291,18 +296,41 @@ def extract_year(text):
 
 # ============================== Работа с PDF ================================
 
+def _unreadable(file_path):
+    """Файл, который не удалось прочитать (повреждён и т. п.)."""
+    return {
+        "title": "",
+        "author": "",
+        "year": "",
+        "path": file_path,
+        "unreadable": True,
+    }
+
+
 def read_pdf_info(file_path):
-    """Читает один PDF и возвращает словарь: название, автор, год, путь."""
+    """Читает один PDF и возвращает словарь: название, автор, год, путь.
+
+    Любая ошибка разбора не должна ронять сервис: файл просто помечается
+    как нечитаемый, а анализ продолжается.
+    """
     try:
         reader = PdfReader(file_path)
     except Exception:
-        # Файл повреждён или не читается — пропускаем его
-        return None
+        return _unreadable(file_path)
 
-    # Файл зашифрован паролем: пробуем открыть пустым паролем.
-    # Если не получилось — помечаем как защищённый и не читаем текст.
     try:
-        if reader.is_encrypted and not reader.decrypt(""):
+        # Файл зашифрован паролем: пробуем открыть пустым паролем.
+        # Если не получилось — помечаем как защищённый и не читаем текст.
+        try:
+            if reader.is_encrypted and not reader.decrypt(""):
+                return {
+                    "title": "",
+                    "author": "",
+                    "year": "",
+                    "path": file_path,
+                    "encrypted": True,
+                }
+        except Exception:
             return {
                 "title": "",
                 "author": "",
@@ -310,43 +338,45 @@ def read_pdf_info(file_path):
                 "path": file_path,
                 "encrypted": True,
             }
-    except Exception:
-        return {
-            "title": "",
-            "author": "",
-            "year": "",
-            "path": file_path,
-            "encrypted": True,
-        }
 
-    # 1. Свойства PDF
-    meta_title = meta_author = ""
-    try:
-        meta = reader.metadata
-        if meta:
-            meta_title = clean_text(meta.title or "")
-            meta_author = clean_text(meta.author or "")
-    except Exception:
-        pass
-    if meta_title.lower() in ("untitled", "title", "document"):
-        meta_title = ""
-
-    # 2. Текст первых страниц (8 страниц: обложка + начало статьи)
-    page_texts = []
-    for page in reader.pages[:8]:
+        # 1. Свойства PDF
+        meta_title = meta_author = ""
         try:
-            page_texts.append(page.extract_text() or "")
+            meta = reader.metadata
+            if meta:
+                meta_title = clean_text(meta.title or "")
+                meta_author = clean_text(meta.author or "")
         except Exception:
-            page_texts.append("")
+            pass
+        if meta_title.lower() in ("untitled", "title", "document"):
+            meta_title = ""
 
-    full_text = fix_mojibake("\n".join(page_texts[:4]))
+        # 2. Текст первых страниц (8 страниц: обложка + начало статьи)
+        page_texts = []
+        try:
+            for index, page in enumerate(reader.pages):
+                if index >= 8:
+                    break
+                try:
+                    page_texts.append(page.extract_text() or "")
+                except Exception:
+                    page_texts.append("")
+        except Exception:
+            # Не удалось получить страницы — считаем по тому, что успели.
+            traceback.print_exc()
 
-    return {
-        "title": extract_title(page_texts, meta_title) or "—",
-        "author": extract_author(full_text, meta_author) or "—",
-        "year": extract_year(full_text) or "—",
-        "path": file_path,
-    }
+        full_text = fix_mojibake("\n".join(page_texts[:4]))
+
+        return {
+            "title": extract_title(page_texts, meta_title) or "—",
+            "author": extract_author(full_text, meta_author) or "—",
+            "year": extract_year(full_text) or "—",
+            "path": file_path,
+        }
+    except Exception:
+        # Любая непредвиденная ошибка — помечаем файл, но не роняем анализ.
+        traceback.print_exc()
+        return _unreadable(file_path)
 
 
 def analyze_folder(folder_path):
@@ -356,11 +386,20 @@ def analyze_folder(folder_path):
         for name in sorted(files):
             if not name.lower().endswith(".pdf"):
                 continue
-            info = read_pdf_info(os.path.join(root, name))
-            if info:
-                if info.get("encrypted"):
-                    info["title"] = "защищен паролем"
-                results.append(info)
+            full_path = os.path.join(root, name)
+            try:
+                info = read_pdf_info(full_path)
+            except Exception:
+                # Ни один файл не должен ронять весь анализ.
+                traceback.print_exc()
+                info = _unreadable(full_path)
+            if not info:
+                info = _unreadable(full_path)
+            if info.get("encrypted"):
+                info["title"] = "защищен паролем"
+            elif info.get("unreadable"):
+                info["title"] = "не удалось прочитать"
+            results.append(info)
     return results
 
 
@@ -499,8 +538,15 @@ def analyze():
     if not os.path.isdir(folder):
         return jsonify({"error": "Папка не найдена: " + folder}), 400
 
-    results = analyze_folder(folder)
-    report_name = save_report(results)
+    try:
+        results = analyze_folder(folder)
+        report_name = save_report(results)
+    except Exception as exc:
+        # Показываем настоящую причину, а не общее «500».
+        traceback.print_exc()
+        return jsonify({
+            "error": "Ошибка при обработке: " + exc.__class__.__name__ + ": " + str(exc),
+        }), 500
     LAST_FOLDER = os.path.abspath(folder)
 
     no_title = sum(1 for item in results if item["title"] == "—")
